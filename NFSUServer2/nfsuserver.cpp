@@ -206,7 +206,7 @@ bool IsValidCar(const unsigned char wei, const unsigned char sus, const unsigned
 	tur_l = (tur >> 1) & 0x03;
 	nos_l = (nos >> 1) & 0x03;
 	ecu_l = (ecu >> 1) & 0x03;
-	wei_l = (tra >> 1) & 0x03;
+	tra_l = (tra >> 1) & 0x03;
 	tir_l = (tir >> 1) & 0x03;
 	bra_l = (bra >> 1) & 0x03;
 	
@@ -215,6 +215,47 @@ bool IsValidCar(const unsigned char wei, const unsigned char sus, const unsigned
 	}
 			
 	return true;
+}
+
+// 2022-08-23
+// check if Tj parts are installed
+bool hasTJPart(const unsigned char wei, const unsigned char sus, const unsigned char eng, const unsigned char tur,
+				const unsigned char nos, const unsigned char ecu, const unsigned char tra, const unsigned char tir,
+				const unsigned char bra){
+
+	unsigned char wei_tj, sus_tj, eng_tj, tur_tj, nos_tj, ecu_tj, tra_tj, tir_tj, bra_tj;
+
+	wei_tj = wei & 0x01;
+	sus_tj = sus & 0x01;
+	eng_tj = eng & 0x01;
+	tur_tj = tur & 0x01;
+	nos_tj = nos & 0x01;
+	ecu_tj = ecu & 0x01;
+	tra_tj = tra & 0x01;
+	tir_tj = tir & 0x01;
+	bra_tj = bra & 0x01;
+	
+	if ((wei_tj + sus_tj + eng_tj + tur_tj + nos_tj + ecu_tj + tra_tj + tir_tj + bra_tj) > 1) {
+		return true;
+	}
+
+	return false;
+}
+
+
+// 2022-08-23
+// Check if NOS is installed
+bool hasNOS(const unsigned char nos, const unsigned char level) {
+
+	unsigned char nos_l;
+
+	nos_l = (nos >> 1) & 0x03;
+
+	if (nos_l > level) {
+		return true;
+	}
+
+	return false;
 }
 
 void Log( char *log ){
@@ -828,7 +869,7 @@ threadfunc ListenerWorker(void *Dummy){
 										// Check for car performance level restriction in some rooms
 										
 										// Check closed 2014-06-01 
-										/*
+										
 										unsigned char Car_brand, Wei, Sus, Eng, Tur, Nos, Ecu, Tra, Tir, Bra;
 
 										strncpy(car_b64, user->car, 9);
@@ -871,14 +912,34 @@ threadfunc ListenerWorker(void *Dummy){
 											}
 										}
 
-										if (strncmp(buf+19, "PRO_ONLY", 8)==0) {
+										if (strncmp(buf + 19, "PRO_ONLY", 8) == 0) {
 											if (!IsValidCar(Wei, Sus, Eng, Tur, Nos, Ecu, Tra, Tir, Bra, 2)) {
 												temp->OutgoingMessages.AddMessage(MakeMessage(buffer, "movefull", NULL, 0));
 												break;
 											}
 										}
-										*/
-
+										
+										if (strncmp(buf + 19, "noNOS", 5) == 0) {
+											if (hasNOS(Nos, 0)) {
+												temp->OutgoingMessages.AddMessage(MakeMessage(buffer, "movefull", NULL, 0));
+												break;
+											}
+										}
+										
+										if (strncmp(buf + 19, "NOS+noTJ", 8) == 0) {
+											if (hasTJPart(Wei, Sus, Eng, Tur, Nos, Ecu, Tra, Tir, Bra)) {
+												temp->OutgoingMessages.AddMessage(MakeMessage(buffer, "movefull", NULL, 0));
+												break;
+											}
+										}
+										
+										if (strncmp(buf + 19, "noNOS+noTJ", 10) == 0) {
+											if (hasTJPart(Wei, Sus, Eng, Tur, Nos, Ecu, Tra, Tir, Bra) || hasNOS(Nos, 0))   {
+												temp->OutgoingMessages.AddMessage(MakeMessage(buffer, "movefull", NULL, 0));
+												break;
+											}
+										}
+										
 										rom->AddUser(user, buffer);
 
 										sprintf(arr2[0], "Z=%u/%u", rom->ID, rom->Count);
