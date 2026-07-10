@@ -9,6 +9,21 @@ extern char arr2[30][1024];
 
 extern std::vector<PlayerStat> PS;
 
+// Returns the name to display for a user in the room's player list.
+// Appends "-inrace" while the user is in a game, so other players in the
+// lobby can tell at a glance that they're not actually available. The
+// underlying UserClass::Personas value (used for stats lookups, login,
+// etc.) is left untouched - this only affects what's shown to others.
+static char* GetRoomDisplayName(UserClass *user) {
+	static char displayName[1024];
+	if (user->Game != NULL) {
+		sprintf(displayName, "%s-inrace", user->Personas[user->SelectedPerson]);
+	} else {
+		sprintf(displayName, "%s", user->Personas[user->SelectedPerson]);
+	}
+	return displayName;
+}
+
 std::vector<StarsLap> S1001;
 std::vector<StarsLap> S1002;
 std::vector<StarsLap> S1003;
@@ -650,9 +665,9 @@ void GameClass::StartGame( char *buffer ) {
 		if (ru->User->Connection != NULL){
 			ru->User->Connection->OutgoingMessages.AddMessage (MakeMessage (buffer, "+ses", arr, 13 + l * 3));
 			/*
-			  äîáàëÿåì èíôó î íà÷àâøèõñÿ ñåññèÿõ (â ïîíèìàíèè ñåðâåðà ñåññèÿ - ýòî çàåçä!)
-			  íóæíî ñîõðàíèòü èíôó îá èìåíè èãðîêà è òèïå êîìíàòû, ÷òîá îïðåäåëèòü
-			  â äàëüíåéøåì ðåéòèíãîâûé çàåçä áûë èëè íåò.
+			  Ã¤Ã®Ã¡Ã Ã«Ã¿Ã¥Ã¬ Ã¨Ã­Ã´Ã³ Ã® Ã­Ã Ã·Ã Ã¢Ã¸Ã¨ÃµÃ±Ã¿ Ã±Ã¥Ã±Ã±Ã¨Ã¿Ãµ (Ã¢ Ã¯Ã®Ã­Ã¨Ã¬Ã Ã­Ã¨Ã¨ Ã±Ã¥Ã°Ã¢Ã¥Ã°Ã  Ã±Ã¥Ã±Ã±Ã¨Ã¿ - Ã½Ã²Ã® Ã§Ã Ã¥Ã§Ã¤!)
+			  Ã­Ã³Ã¦Ã­Ã® Ã±Ã®ÃµÃ°Ã Ã­Ã¨Ã²Ã¼ Ã¨Ã­Ã´Ã³ Ã®Ã¡ Ã¨Ã¬Ã¥Ã­Ã¨ Ã¨Ã£Ã°Ã®ÃªÃ  Ã¨ Ã²Ã¨Ã¯Ã¥ ÃªÃ®Ã¬Ã­Ã Ã²Ã», Ã·Ã²Ã®Ã¡ Ã®Ã¯Ã°Ã¥Ã¤Ã¥Ã«Ã¨Ã²Ã¼
+			  Ã¢ Ã¤Ã Ã«Ã¼Ã­Ã¥Ã©Ã¸Ã¥Ã¬ Ã°Ã¥Ã©Ã²Ã¨Ã­Ã£Ã®Ã¢Ã»Ã© Ã§Ã Ã¥Ã§Ã¤ Ã¡Ã»Ã« Ã¨Ã«Ã¨ Ã­Ã¥Ã².
 			//*/
 			session=(SessionClass*)calloc(1, sizeof(SessionClass));
 			strcpy(session->Persona, ru->User->Personas[ru->User->SelectedPerson]);
@@ -687,7 +702,7 @@ void RoomClass::AddUser( UserClass *user, char *buffer ) {
 	if (Verbose) Log (buffer);
 
 	sprintf (arr2[0], "I=%u", user->id);
-	sprintf (arr2[1], "N=%s", user->Personas[user->SelectedPerson]);
+	sprintf (arr2[1], "N=%s", GetRoomDisplayName(user));
 	sprintf (arr2[2], "M=%s", user->Username);
 	sprintf (arr2[3], "F=");
 	sprintf (arr2[4], "A=%s", user->IP);
@@ -716,7 +731,7 @@ void RoomClass::RefreshUser( UserClass *user, char *buffer ) {
 	if (Verbose) Log (buffer);
 
 	sprintf (arr2[0], "I=%u", user->id);
-	sprintf (arr2[1], "N=%s", user->Personas[user->SelectedPerson]);
+	sprintf (arr2[1], "N=%s", GetRoomDisplayName(user));
 	sprintf (arr2[2], "M=%s", user->Username);
 	sprintf (arr2[3], "F=H");
 	sprintf (arr2[4], "A=%s", user->IP);
@@ -724,11 +739,10 @@ void RoomClass::RefreshUser( UserClass *user, char *buffer ) {
 	sprintf (arr2[6], "S=%s", GetPlayerStat(user->Personas[user->SelectedPerson]));
 	sprintf (arr2[7], "X=%s", user->car);
 
-	if (user->Game != NULL) {
-		sprintf (arr2[8], "G=%u", user->Game->ID);
-	} else {
-		sprintf (arr2[8], "G=0");
-	}
+	// Always report as not-in-game so the player stays visible in the room's
+	// player list even after joining a race. (Previously: G=<gameID> while racing.)
+	// The -inrace suffix on the name above is what now signals race status instead.
+	sprintf (arr2[8], "G=0");
 	sprintf (arr2[9], "T=2");
 	BroadCastCommand (Users, "+usr", arr, 10, buffer);
 } ;
@@ -773,7 +787,7 @@ void RoomClass::ListToUser( UserClass *user, char *buffer ) {
 
 	while (tmp != NULL) {
 		sprintf (arr2[0], "I=%u", tmp->User->id);
-		sprintf (arr2[1], "N=%s", tmp->User->Personas[tmp->User->SelectedPerson]);
+		sprintf (arr2[1], "N=%s", GetRoomDisplayName(tmp->User));
 		sprintf (arr2[2], "M=%s", tmp->User->Username);
 		sprintf (arr2[3], "F=H");
 		sprintf (arr2[4], "A=%s", tmp->User->IP);
@@ -781,11 +795,9 @@ void RoomClass::ListToUser( UserClass *user, char *buffer ) {
 		sprintf (arr2[6], "S=%s", GetPlayerStat(tmp->User->Personas[tmp->User->SelectedPerson]));
 		sprintf (arr2[7], "X=%s", tmp->User->car);
 
-		if (tmp->User->Game != NULL) {
-			sprintf (arr2[8], "G=%u", tmp->User->Game->ID);
-		} else {
-			sprintf (arr2[8], "G=0");
-		}
+		// Same as RefreshUser: always report G=0 so racing players still show
+		// up in the room list for anyone who freshly joins/refreshes the room.
+		sprintf (arr2[8], "G=0");
 		sprintf (arr2[9], "T=2");
 
 		if (user->Connection != NULL)
