@@ -200,6 +200,7 @@ class RUsersClass {
 class GameClass {
 	public:
 		bool working;
+		bool Started; // true once StartGame() has actually kicked off the race
 		int max, min;
 		int Count;
 		int ID;
