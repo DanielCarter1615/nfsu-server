@@ -10,15 +10,17 @@ extern char arr2[30][1024];
 extern std::vector<PlayerStat> PS;
 
 // Returns the name to display for a user in the room's player list.
-// Appends "-inrace" once the user's race has actually started (not just
-// while they're sitting in a pre-race game lobby), so other players in the
-// room list can tell at a glance that they're not actually available. The
-// underlying UserClass::Personas value (used for stats lookups, login,
+// - Not in a game:                 "Name"
+// - In a game, race not started:   "Name>>>Join"   (invites others to join)
+// - Race has actually started:     "[Name]-inrace" (signals they're unavailable)
+// The underlying UserClass::Personas value (used for stats lookups, login,
 // etc.) is left untouched - this only affects what's shown to others.
 static char* GetRoomDisplayName(UserClass *user) {
 	static char displayName[1024];
 	if (user->Game != NULL && user->Game->Started) {
-		sprintf(displayName, "%s-inrace", user->Personas[user->SelectedPerson]);
+		sprintf(displayName, "[%s]-inrace", user->Personas[user->SelectedPerson]);
+	} else if (user->Game != NULL) {
+		sprintf(displayName, "%s>>>Join", user->Personas[user->SelectedPerson]);
 	} else {
 		sprintf(displayName, "%s", user->Personas[user->SelectedPerson]);
 	}
