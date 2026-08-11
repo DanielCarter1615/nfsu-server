@@ -10,13 +10,14 @@ extern char arr2[30][1024];
 extern std::vector<PlayerStat> PS;
 
 // Returns the name to display for a user in the room's player list.
-// Appends "-inrace" while the user is in a game, so other players in the
-// lobby can tell at a glance that they're not actually available. The
+// Appends "-inrace" once the user's race has actually started (not just
+// while they're sitting in a pre-race game lobby), so other players in the
+// room list can tell at a glance that they're not actually available. The
 // underlying UserClass::Personas value (used for stats lookups, login,
 // etc.) is left untouched - this only affects what's shown to others.
 static char* GetRoomDisplayName(UserClass *user) {
 	static char displayName[1024];
-	if (user->Game != NULL) {
+	if (user->Game != NULL && user->Game->Started) {
 		sprintf(displayName, "%s-inrace", user->Personas[user->SelectedPerson]);
 	} else {
 		sprintf(displayName, "%s", user->Personas[user->SelectedPerson]);
@@ -631,6 +632,8 @@ void GameClass::StartGame( char *buffer ) {
 	if (Verbose) Log (buffer);
 	int k;
 
+	Started = true;
+
 	sprintf (arr2[0], "IDENT=%u", ID);
 	sprintf (arr2[1], "WHEN=2003.12.8 15:52:54");
 	sprintf (arr2[2], "NAME=%s", Name);
@@ -665,9 +668,9 @@ void GameClass::StartGame( char *buffer ) {
 		if (ru->User->Connection != NULL){
 			ru->User->Connection->OutgoingMessages.AddMessage (MakeMessage (buffer, "+ses", arr, 13 + l * 3));
 			/*
-			  äîáàëÿåì èíôó î íà÷àâøèõñÿ ñåññèÿõ (â ïîíèìàíèè ñåðâåðà ñåññèÿ - ýòî çàåçä!)
-			  íóæíî ñîõðàíèòü èíôó îá èìåíè èãðîêà è òèïå êîìíàòû, ÷òîá îïðåäåëèòü
-			  â äàëüíåéøåì ðåéòèíãîâûé çàåçä áûë èëè íåò.
+			  добаляем инфу о начавшихся сессиях (в понимании сервера сессия - это заезд!)
+			  нужно сохранить инфу об имени игрока и типе комнаты, чтоб определить
+			  в дальнейшем рейтинговый заезд был или нет.
 			//*/
 			session=(SessionClass*)calloc(1, sizeof(SessionClass));
 			strcpy(session->Persona, ru->User->Personas[ru->User->SelectedPerson]);
@@ -679,6 +682,15 @@ void GameClass::StartGame( char *buffer ) {
 		ru = ru->Next;
 	}
 	BroadCastCommand (Users.First->User->CurrentRoom->Users, "+agm", arr, 11 + l * 3, buffer);
+
+	// Push an updated room-list entry for every racer now that the race has
+	// actually started, so their name flips to "-inrace" for the rest of the
+	// room immediately (rather than waiting for the next join/leave event).
+	ru = Users.First;
+	while (ru != NULL) {
+		ru->User->CurrentRoom->RefreshUser (ru->User, buffer);
+		ru = ru->Next;
+	}
 }
 
 void RoomClass::AddUser( UserClass *user, char *buffer ) {
