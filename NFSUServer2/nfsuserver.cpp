@@ -838,10 +838,6 @@ threadfunc ListenerWorker(void *Dummy){
 									sprintf(arr2[13], "ADDR0=%s", user->IP);
 
 									temp->OutgoingMessages.AddMessage(MakeMessage(buffer, "gcre", arr, 14));
-
-									room->RefreshUser(user, buffer);
-
-									BroadCastCommand(room->Users, "+agm", arr, 14, buffer);
 								}
 								break;
 						}
@@ -946,7 +942,7 @@ threadfunc ListenerWorker(void *Dummy){
 										arr[0]=(char*)&arr2[0];
 										BroadCastCommand(&Server.Users, "+pop", arr, 1, buffer);
 
-										// сообщение при входе в комнату
+										// СЃРѕРѕР±С‰РµРЅРёРµ РїСЂРё РІС…РѕРґРµ РІ РєРѕРјРЅР°С‚Сѓ
 										if (Server.WelcomeMessage[0] != '\0') {
 											UserClass* us;
 											us = Server.Users.UserFromUsername(user->Personas[user->SelectedPerson]);
@@ -1176,7 +1172,7 @@ threadfunc ListenerWorker(void *Dummy){
 									int BestDrift;
 									int BlockSize = 58 + 8 * Laps;
 
-									// цикл для нахождения информации о результатах автора реплики (он же REPT)
+									// С†РёРєР» РґР»СЏ РЅР°С…РѕР¶РґРµРЅРёСЏ РёРЅС„РѕСЂРјР°С†РёРё Рѕ СЂРµР·СѓР»СЊС‚Р°С‚Р°С… Р°РІС‚РѕСЂР° СЂРµРїР»РёРєРё (РѕРЅ Р¶Рµ REPT)
 									int l=0;
 									while (l < PlayersCount) {
 										SeedNo = dec_resu[7+BlockSize*l];
@@ -1193,7 +1189,7 @@ threadfunc ListenerWorker(void *Dummy){
 											FF = *pFF;
 											Disc = FF * 1;
 											BestDrift = (dec_resu[7+15+Laps*4+32+BlockSize*l]&0xFF)|((dec_resu[7+14+Laps*4+32+BlockSize*l]<<8)&0xFF00)|((dec_resu[7+13+Laps*4+32+BlockSize*l]<<16)&0xFF0000)|((dec_resu[7+12+Laps*4+32+BlockSize*l]<<24)&0xFF000000);
-											// не очень участок ниже, может отказаться от него
+											// РЅРµ РѕС‡РµРЅСЊ СѓС‡Р°СЃС‚РѕРє РЅРёР¶Рµ, РјРѕР¶РµС‚ РѕС‚РєР°Р·Р°С‚СЊСЃСЏ РѕС‚ РЅРµРіРѕ
 											/*
 											if (FinishMark == 9) Place = PlayersCount;
 											if (FinishMark == 10) Place = PlayersCount - 1;
@@ -1204,9 +1200,9 @@ threadfunc ListenerWorker(void *Dummy){
 										l++;
 									}
                                     /*
-									 тут из Sessions находим игрока и определяем комнату
-									 в которой он проводил последнюю гонку
-									 если комната рейтинговая, то пересчитываем статистику
+									 С‚СѓС‚ РёР· Sessions РЅР°С…РѕРґРёРј РёРіСЂРѕРєР° Рё РѕРїСЂРµРґРµР»СЏРµРј РєРѕРјРЅР°С‚Сѓ
+									 РІ РєРѕС‚РѕСЂРѕР№ РѕРЅ РїСЂРѕРІРѕРґРёР» РїРѕСЃР»РµРґРЅСЋСЋ РіРѕРЅРєСѓ
+									 РµСЃР»Рё РєРѕРјРЅР°С‚Р° СЂРµР№С‚РёРЅРіРѕРІР°СЏ, С‚Рѕ РїРµСЂРµСЃС‡РёС‚С‹РІР°РµРј СЃС‚Р°С‚РёСЃС‚РёРєСѓ
                                     //*/
                                     SessionClass *session=Sessions.First;
                                     
@@ -1224,12 +1220,12 @@ threadfunc ListenerWorker(void *Dummy){
 									  session = session->Next;
 									}
 									/* 
-									   Первая буква имени комнаты для рейтинговых A, B, C, D 
-									   или 65, 66, 67, 68 DEC соответственно.
-									   Для нерейтинговых комнат первая буква E, F, G, H
-									   или 69, 70, 71, 72 DEC соответственно
+									   РџРµСЂРІР°СЏ Р±СѓРєРІР° РёРјРµРЅРё РєРѕРјРЅР°С‚С‹ РґР»СЏ СЂРµР№С‚РёРЅРіРѕРІС‹С… A, B, C, D 
+									   РёР»Рё 65, 66, 67, 68 DEC СЃРѕРѕС‚РІРµС‚СЃС‚РІРµРЅРЅРѕ.
+									   Р”Р»СЏ РЅРµСЂРµР№С‚РёРЅРіРѕРІС‹С… РєРѕРјРЅР°С‚ РїРµСЂРІР°СЏ Р±СѓРєРІР° E, F, G, H
+									   РёР»Рё 69, 70, 71, 72 DEC СЃРѕРѕС‚РІРµС‚СЃС‚РІРµРЅРЅРѕ
 									*/
-									if (RoomType<69){ // если комната рейтинговая пересчет статистики
+									if (RoomType<69){ // РµСЃР»Рё РєРѕРјРЅР°С‚Р° СЂРµР№С‚РёРЅРіРѕРІР°СЏ РїРµСЂРµСЃС‡РµС‚ СЃС‚Р°С‚РёСЃС‚РёРєРё
 										// calculate reporter statistic
 										switch (ReptNo) {
 											case 0:
@@ -1246,12 +1242,12 @@ threadfunc ListenerWorker(void *Dummy){
 												break;
 										}
 										// check/update stars of week Ranked rooms only
-										//if (FinishMark == 1)  // надо поработать над этим условием
+										//if (FinishMark == 1)  // РЅР°РґРѕ РїРѕСЂР°Р±РѕС‚Р°С‚СЊ РЅР°Рґ СЌС‚РёРј СѓСЃР»РѕРІРёРµРј
 										//	UpdateBestTimes(Track, Dir, rept, Car, BestLap, BestDrift);
 									}
 									// check/update stars of week (best lap times)
 									// ranked & unranked room 
-									if (FinishMark == 1)  // надо поработать над этим условием
+									if (FinishMark == 1)  // РЅР°РґРѕ РїРѕСЂР°Р±РѕС‚Р°С‚СЊ РЅР°Рґ СЌС‚РёРј СѓСЃР»РѕРІРёРµРј
 										UpdateBestTimes(Track, Dir, rept, Car, BestLap, BestDrift);
 
 									sprintf(arr2[0], "RANK=Unranked");
@@ -1774,7 +1770,7 @@ N=username
 R=item index
 P=rep points
 S=1,wins_in_hex,loses_in_hex,
-0x0000   2B 73 6E 70 00 00 00 00-00 00 00 A4 4E 3D 4C 75   +snp.......¤N=Lu
+0x0000   2B 73 6E 70 00 00 00 00-00 00 00 A4 4E 3D 4C 75   +snp.......В¤N=Lu
 0x0010   67 6E 65 72 63 68 72 69-73 09 52 3D 31 09 50 3D   gnerchris.R=1.P=
 0x0020   32 35 30 30 30 30 37 34-09 53 3D 31 2C 66 36 61   25000074.S=1,f6a
 0x0030   2C 39 33 38 2C 31 39 36-2C 31 37 64 37 38 38 61   ,938,196,17d788a
@@ -1784,7 +1780,7 @@ S=1,wins_in_hex,loses_in_hex,
 0x0070   66 2C 2C 31 2C 2C 36 34-2C 36 61 34 38 2C 32 31   f,,1,,64,6a48,21
 0x0080   35 39 2C 31 2C 66 36 61-2C 39 33 37 2C 31 39 36   59,1,f6a,937,196
 0x0090   2C 35 66 35 65 30 66 66-2C 31 39 66 34 62 32 2C   ,5f5e0ff,19f4b2,
-0x00A0   36 38 64 00 2B 73 6E 70-00 00 00 00 00 00 00 A2   68d.+snp.......ў
+0x00A0   36 38 64 00 2B 73 6E 70-00 00 00 00 00 00 00 A2   68d.+snp.......Сћ
 */
 								if(strncmp(buf+2, "ap", 2)==0){
 									if(Verbose){
@@ -1824,14 +1820,14 @@ S=1,wins_in_hex,loses_in_hex,
 
 									temp->OutgoingMessages.AddMessage(MakeMessage(buffer, "snap", arr, 5));
 
-									// HEX значения, разделенные запятыми 
-									// 0 - рейтинг
-									// 1 - победы
-									// 2 - поражения
-									// 3 - отключения
-									// 4 - очки репутации
-									// 5 - очки репутации соперников (среднее значение)
-									// 6 - рейтинг соперников (среднее значение)
+									// HEX Р·РЅР°С‡РµРЅРёСЏ, СЂР°Р·РґРµР»РµРЅРЅС‹Рµ Р·Р°РїСЏС‚С‹РјРё 
+									// 0 - СЂРµР№С‚РёРЅРі
+									// 1 - РїРѕР±РµРґС‹
+									// 2 - РїРѕСЂР°Р¶РµРЅРёСЏ
+									// 3 - РѕС‚РєР»СЋС‡РµРЅРёСЏ
+									// 4 - РѕС‡РєРё СЂРµРїСѓС‚Р°С†РёРё
+									// 5 - РѕС‡РєРё СЂРµРїСѓС‚Р°С†РёРё СЃРѕРїРµСЂРЅРёРєРѕРІ (СЃСЂРµРґРЅРµРµ Р·РЅР°С‡РµРЅРёРµ)
+									// 6 - СЂРµР№С‚РёРЅРі СЃРѕРїРµСЂРЅРёРєРѕРІ (СЃСЂРµРґРЅРµРµ Р·РЅР°С‡РµРЅРёРµ)
 									
 									int ind = 1;
 									std::vector<PlayerStat>::iterator it;
