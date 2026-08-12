@@ -217,47 +217,6 @@ bool IsValidCar(const unsigned char wei, const unsigned char sus, const unsigned
 	return true;
 }
 
-// 2022-08-23
-// check if Tj parts are installed
-bool hasTJPart(const unsigned char wei, const unsigned char sus, const unsigned char eng, const unsigned char tur,
-				const unsigned char nos, const unsigned char ecu, const unsigned char tra, const unsigned char tir,
-				const unsigned char bra){
-
-	unsigned char wei_tj, sus_tj, eng_tj, tur_tj, nos_tj, ecu_tj, tra_tj, tir_tj, bra_tj;
-
-	wei_tj = wei & 0x01;
-	sus_tj = sus & 0x01;
-	eng_tj = eng & 0x01;
-	tur_tj = tur & 0x01;
-	nos_tj = nos & 0x01;
-	ecu_tj = ecu & 0x01;
-	tra_tj = tra & 0x01;
-	tir_tj = tir & 0x01;
-	bra_tj = bra & 0x01;
-	
-	if ((wei_tj + sus_tj + eng_tj + tur_tj + nos_tj + ecu_tj + tra_tj + tir_tj + bra_tj) > 1) {
-		return true;
-	}
-
-	return false;
-}
-
-
-// 2022-08-23
-// Check if NOS is installed
-bool hasNOS(const unsigned char nos, const unsigned char level) {
-
-	unsigned char nos_l;
-
-	nos_l = (nos >> 1) & 0x03;
-
-	if (nos_l > level) {
-		return true;
-	}
-
-	return false;
-}
-
 void Log( char *log ){
     if (!DisableTimeStamp){
         time_t t;
@@ -838,10 +797,6 @@ threadfunc ListenerWorker(void *Dummy){
 									sprintf(arr2[13], "ADDR0=%s", user->IP);
 
 									temp->OutgoingMessages.AddMessage(MakeMessage(buffer, "gcre", arr, 14));
-
-									room->RefreshUser(user, buffer);
-
-									BroadCastCommand(room->Users, "+agm", arr, 14, buffer);
 								}
 								break;
 						}
@@ -869,7 +824,7 @@ threadfunc ListenerWorker(void *Dummy){
 										// Check for car performance level restriction in some rooms
 										
 										// Check closed 2014-06-01 
-										
+										/*
 										unsigned char Car_brand, Wei, Sus, Eng, Tur, Nos, Ecu, Tra, Tir, Bra;
 
 										strncpy(car_b64, user->car, 9);
@@ -912,41 +867,21 @@ threadfunc ListenerWorker(void *Dummy){
 											}
 										}
 
-										if (strncmp(buf + 19, "PRO_ONLY", 8) == 0) {
+										if (strncmp(buf+19, "PRO_ONLY", 8)==0) {
 											if (!IsValidCar(Wei, Sus, Eng, Tur, Nos, Ecu, Tra, Tir, Bra, 2)) {
 												temp->OutgoingMessages.AddMessage(MakeMessage(buffer, "movefull", NULL, 0));
 												break;
 											}
 										}
-										
-										if (strncmp(buf + 19, "noNOS", 5) == 0) {
-											if (hasNOS(Nos, 0)) {
-												temp->OutgoingMessages.AddMessage(MakeMessage(buffer, "movefull", NULL, 0));
-												break;
-											}
-										}
-										
-										if (strncmp(buf + 19, "NOS+noTJ", 8) == 0) {
-											if (hasTJPart(Wei, Sus, Eng, Tur, Nos, Ecu, Tra, Tir, Bra)) {
-												temp->OutgoingMessages.AddMessage(MakeMessage(buffer, "movefull", NULL, 0));
-												break;
-											}
-										}
-										
-										if (strncmp(buf + 19, "noNOS+noTJ", 10) == 0) {
-											if (hasTJPart(Wei, Sus, Eng, Tur, Nos, Ecu, Tra, Tir, Bra) || hasNOS(Nos, 0))   {
-												temp->OutgoingMessages.AddMessage(MakeMessage(buffer, "movefull", NULL, 0));
-												break;
-											}
-										}
-										
+										*/
+
 										rom->AddUser(user, buffer);
 
 										sprintf(arr2[0], "Z=%u/%u", rom->ID, rom->Count);
 										arr[0]=(char*)&arr2[0];
 										BroadCastCommand(&Server.Users, "+pop", arr, 1, buffer);
 
-										// сообщение при входе в комнату
+										// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 										if (Server.WelcomeMessage[0] != '\0') {
 											UserClass* us;
 											us = Server.Users.UserFromUsername(user->Personas[user->SelectedPerson]);
@@ -1176,7 +1111,7 @@ threadfunc ListenerWorker(void *Dummy){
 									int BestDrift;
 									int BlockSize = 58 + 8 * Laps;
 
-									// цикл для нахождения информации о результатах автора реплики (он же REPT)
+									// пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅ пїЅпїЅ REPT)
 									int l=0;
 									while (l < PlayersCount) {
 										SeedNo = dec_resu[7+BlockSize*l];
@@ -1193,7 +1128,7 @@ threadfunc ListenerWorker(void *Dummy){
 											FF = *pFF;
 											Disc = FF * 1;
 											BestDrift = (dec_resu[7+15+Laps*4+32+BlockSize*l]&0xFF)|((dec_resu[7+14+Laps*4+32+BlockSize*l]<<8)&0xFF00)|((dec_resu[7+13+Laps*4+32+BlockSize*l]<<16)&0xFF0000)|((dec_resu[7+12+Laps*4+32+BlockSize*l]<<24)&0xFF000000);
-											// не очень участок ниже, может отказаться от него
+											// пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ
 											/*
 											if (FinishMark == 9) Place = PlayersCount;
 											if (FinishMark == 10) Place = PlayersCount - 1;
@@ -1204,9 +1139,9 @@ threadfunc ListenerWorker(void *Dummy){
 										l++;
 									}
                                     /*
-									 тут из Sessions находим игрока и определяем комнату
-									 в которой он проводил последнюю гонку
-									 если комната рейтинговая, то пересчитываем статистику
+									 пїЅпїЅпїЅ пїЅпїЅ Sessions пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+									 пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+									 пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
                                     //*/
                                     SessionClass *session=Sessions.First;
                                     
@@ -1224,12 +1159,12 @@ threadfunc ListenerWorker(void *Dummy){
 									  session = session->Next;
 									}
 									/* 
-									   Первая буква имени комнаты для рейтинговых A, B, C, D 
-									   или 65, 66, 67, 68 DEC соответственно.
-									   Для нерейтинговых комнат первая буква E, F, G, H
-									   или 69, 70, 71, 72 DEC соответственно
+									   пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ A, B, C, D 
+									   пїЅпїЅпїЅ 65, 66, 67, 68 DEC пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
+									   пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ E, F, G, H
+									   пїЅпїЅпїЅ 69, 70, 71, 72 DEC пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 									*/
-									if (RoomType<69){ // если комната рейтинговая пересчет статистики
+									if (RoomType<69){ // пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 										// calculate reporter statistic
 										switch (ReptNo) {
 											case 0:
@@ -1246,12 +1181,12 @@ threadfunc ListenerWorker(void *Dummy){
 												break;
 										}
 										// check/update stars of week Ranked rooms only
-										//if (FinishMark == 1)  // надо поработать над этим условием
+										//if (FinishMark == 1)  // пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 										//	UpdateBestTimes(Track, Dir, rept, Car, BestLap, BestDrift);
 									}
 									// check/update stars of week (best lap times)
 									// ranked & unranked room 
-									if (FinishMark == 1)  // надо поработать над этим условием
+									if (FinishMark == 1)  // пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 										UpdateBestTimes(Track, Dir, rept, Car, BestLap, BestDrift);
 
 									sprintf(arr2[0], "RANK=Unranked");
@@ -1774,7 +1709,7 @@ N=username
 R=item index
 P=rep points
 S=1,wins_in_hex,loses_in_hex,
-0x0000   2B 73 6E 70 00 00 00 00-00 00 00 A4 4E 3D 4C 75   +snp.......¤N=Lu
+0x0000   2B 73 6E 70 00 00 00 00-00 00 00 A4 4E 3D 4C 75   +snp.......пїЅN=Lu
 0x0010   67 6E 65 72 63 68 72 69-73 09 52 3D 31 09 50 3D   gnerchris.R=1.P=
 0x0020   32 35 30 30 30 30 37 34-09 53 3D 31 2C 66 36 61   25000074.S=1,f6a
 0x0030   2C 39 33 38 2C 31 39 36-2C 31 37 64 37 38 38 61   ,938,196,17d788a
@@ -1784,7 +1719,7 @@ S=1,wins_in_hex,loses_in_hex,
 0x0070   66 2C 2C 31 2C 2C 36 34-2C 36 61 34 38 2C 32 31   f,,1,,64,6a48,21
 0x0080   35 39 2C 31 2C 66 36 61-2C 39 33 37 2C 31 39 36   59,1,f6a,937,196
 0x0090   2C 35 66 35 65 30 66 66-2C 31 39 66 34 62 32 2C   ,5f5e0ff,19f4b2,
-0x00A0   36 38 64 00 2B 73 6E 70-00 00 00 00 00 00 00 A2   68d.+snp.......ў
+0x00A0   36 38 64 00 2B 73 6E 70-00 00 00 00 00 00 00 A2   68d.+snp.......пїЅ
 */
 								if(strncmp(buf+2, "ap", 2)==0){
 									if(Verbose){
@@ -1824,14 +1759,14 @@ S=1,wins_in_hex,loses_in_hex,
 
 									temp->OutgoingMessages.AddMessage(MakeMessage(buffer, "snap", arr, 5));
 
-									// HEX значения, разделенные запятыми 
-									// 0 - рейтинг
-									// 1 - победы
-									// 2 - поражения
-									// 3 - отключения
-									// 4 - очки репутации
-									// 5 - очки репутации соперников (среднее значение)
-									// 6 - рейтинг соперников (среднее значение)
+									// HEX пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 
+									// 0 - пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+									// 1 - пїЅпїЅпїЅпїЅпїЅпїЅ
+									// 2 - пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+									// 3 - пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+									// 4 - пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+									// 5 - пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ)
+									// 6 - пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ)
 									
 									int ind = 1;
 									std::vector<PlayerStat>::iterator it;
@@ -2561,8 +2496,8 @@ threadfunc Maintenance(void *Dummy){
 		user=Server.Users.First;
 		while(user!=NULL){
 			user->Idle++;
-			if((user->Idle>60*45)&&(user->Connection==NULL)){
-				Log("Removing user due to 45 min timeout\n");
+			if((user->Idle>60*15)&&(user->Connection==NULL)){
+				Log("Removing user due to 15 min timeout\n");
 				t=user->Next;
 				Server.Users.RemoveUser(user);
 				free(user);
@@ -3411,4 +3346,3 @@ int main(int argc, char* argv[]){
 	DeInitServer();
 	return 0;
 }
-
